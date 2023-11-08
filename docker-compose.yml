@@ -1,42 +1,31 @@
 version: '3'
 services:
-  mediawiki_wiki:
-    #build: ./../../../ # Uncomment to build from source
-    image: kristophjunge/mediawiki
-    container_name: mediawiki_wiki
-    environment:
-      MEDIAWIKI_SERVER: http://localhost:8083
-      MEDIAWIKI_SITENAME: PohodnikWiki
-      MEDIAWIKI_LANGUAGE_CODE: ru
-      MEDIAWIKI_SECRET_KEY: a6578339c8f73c8721b43241056d28af5be10dd922cd426ef10f086dd590aa8e
-      MEDIAWIKI_DB_TYPE: mysql
-      MEDIAWIKI_DB_HOST: mediawiki_mysql
-      MEDIAWIKI_DB_PORT: 3306
-      MEDIAWIKI_DB_NAME: wikidb
-      MEDIAWIKI_DB_USER: wikiuser
-      MEDIAWIKI_DB_TABLE_OPTIONS: ENGINE=InnoDB, DEFAULT CHARSET=binary
-      MEDIAWIKI_DB_PASSWORD: mysecret
-      MEDIAWIKI_ENABLE_UPLOADS: 1
-      MEDIAWIKI_EXTENSION_VISUAL_EDITOR_ENABLED: 1
-      MEDIAWIKI_DEFAULT_SKIN: vector
+  mediawiki:
+    image: mediawiki
+    restart: always
     ports:
-      - 8083:8080
-    depends_on:
-      - mediawiki_mysql
+      - 8083:80
+    links:
+      - database
     volumes:
-      - mediawiki_images:/images
-    #- ./../../../testdata/logo.png:/var/www/mediawiki/resources/assets/wiki.png:ro
-    #- ./../../../testdata/ExtraLocalSettings.php:/var/www/mediawiki/ExtraLocalSettings.php:ro
-  mediawiki_mysql:
-    image: mysql:5.7
-    container_name: mediawiki_mysql
+      - images:/var/www/html/images
+      # After initial setup, download LocalSettings.php to the same directory as
+      # this yaml and uncomment the following line and use compose to restart
+      # the mediawiki service
+      # - ./LocalSettings.php:/var/www/html/LocalSettings.php
+  # This key also defines the name of the database host used during setup instead of the default "localhost"
+  database:
+    image: mariadb
+    restart: always
     environment:
-      MYSQL_DATABASE: wikidb
+      # @see https://phabricator.wikimedia.org/source/mediawiki/browse/master/includes/DefaultSettings.php
+      MYSQL_DATABASE: my_wiki
       MYSQL_USER: wikiuser
-      MYSQL_PASSWORD: mysecret
-      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_PASSWORD: example
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
     volumes:
-      - mediawiki_mysql:/var/lib/mysql
+      - db:/var/lib/mysql
+
 volumes:
-  mediawiki_images:
-  mediawiki_mysql:
+  images:
+  db:

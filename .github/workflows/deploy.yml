@@ -1,0 +1,32 @@
+name: Deploy backend pohodnik.tk
+on:
+  push:
+    branches: [ main ]
+jobs:
+  deploy:
+    name: Deploy to pohodniki.tk
+    runs-on: ubuntu-latest
+    steps:
+      - name: executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.ETERNAL_SSH_HOST }}
+          username: ${{ secrets.ETERNAL_SSH_USER }}
+          key: ${{ secrets.ETERNAL_KEY }}
+          script: |
+            cd ~/
+            rm -rf pohodnik-wiki
+            docker image rm -f pohodnik-wiki_pohbot
+            git clone git@github.com:pohodnik/pohodnik-wiki.git
+            sudo chmod -R 755 pohodnik-wiki
+            cd pohodnik-wiki
+            docker-compose down --rmi all --remove-orphans
+            docker-compose up -d
+      - name: Send telegramm notofication
+        run: curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage -d chat_id=${{ secrets.TELEGRAM_TO }} -d parse_mode=html -d text="$MESSAGE" >> /dev/null
+        env:
+          MESSAGE: |
+            ✔ pohodnik-wiki succesfully deployed.
+            https://wiki.poh58.ru
+            <i>${{ github.event.head_commit.message }}</i>
+            ${{ github.actor }}

@@ -16,7 +16,7 @@ jobs:
           script: |
             cd ~/
             rm -rf pohodnik-wiki
-            docker image rm -f pohodnik-wiki_pohbot
+            docker image rm -f pohodnik-wiki
             git clone git@github.com:pohodnik/pohodnik-wiki.git
             sudo chmod -R 755 pohodnik-wiki
             cd pohodnik-wiki
